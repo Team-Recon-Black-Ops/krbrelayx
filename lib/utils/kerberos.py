@@ -93,6 +93,7 @@ def get_kerberos_loot(token, options):
     #  (section 5.4.2)
 
     newCipher = _enctype_table[int(decodedTGS['ticket']['enc-part']['etype'])]
+    print(f"[🦝] newCipher:\n {cipherText}\n" + 30*"=")
 
     # Create decryption keys from specified Kerberos keys
     if options.hashes is not None:
@@ -107,6 +108,7 @@ def get_kerberos_loot(token, options):
         int(constants.EncryptionTypes.aes256_cts_hmac_sha1_96.value),
         int(constants.EncryptionTypes.aes128_cts_hmac_sha1_96.value)
     ]
+    print(f"[🦝] allciphers: {allciphers}")
 
     # Store Kerberos keys
     # TODO: get the salt from preauth info (requires us to send AS_REQs to the DC)
