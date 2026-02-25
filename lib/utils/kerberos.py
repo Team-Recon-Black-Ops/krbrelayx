@@ -141,8 +141,7 @@ def get_kerberos_loot(token, options):
                     rawsecret = options.password
                 ekeys[cipher] = string_to_key(cipher, rawsecret, options.salt)
             LOG.debug('Calculated type %d Kerberos key: %s', cipher, hexlify(ekeys[cipher].contents))
-            
-    print(f"[🦝] ekeys:\n {ekeys}\n" + 30*"=")
+
     # Select the correct encryption key
     try:
         key = ekeys[decodedTGS['ticket']['enc-part']['etype']]
@@ -154,12 +153,23 @@ def get_kerberos_loot(token, options):
         return None
 
     # Recover plaintext info from ticket
+
     try:
         plainText = newCipher.decrypt(key, 2, cipherText)
     except InvalidChecksum:
         LOG.error('Ciphertext integrity failed. Most likely the account password or AES key is incorrect')
+        LOG.debug('Encryption type used: %d', decodedTGS['ticket']['enc-part']['etype'])
+        LOG.debug('Available encryption keys: %s', list(ekeys.keys()))
+        LOG.debug('Cipher algorithm: %s', newCipher)
+        LOG.debug('Ciphertext length: %d bytes', len(cipherText))
         if options.salt:
             LOG.info('You specified a salt manually. Make sure it has the correct case.')
+        if options.password:
+            LOG.debug('Password was provided for key derivation')
+        if options.hashes:
+            LOG.debug('NTLM hash was provided')
+        if options.aeskey:
+            LOG.debug('AES key was provided')
         return
     LOG.debug('Ticket decrypt OK')
     encTicketPart = decoder.decode(plainText, asn1Spec=EncTicketPart())[0]
