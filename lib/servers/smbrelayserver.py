@@ -155,8 +155,9 @@ class SMBRelayServer(Thread):
         blob = GSSAPIHeader_SPNEGO_Init2()
         blob['tokenOid'] = '1.3.6.1.5.5.2'
         blob['innerContextToken']['mechTypes'].extend([MechType(TypesMech['KRB5 - Kerberos 5']),
-                                                       MechType(TypesMech['MS KRB5 - Microsoft Kerberos 5']),
-                                                       MechType(TypesMech['NTLMSSP - Microsoft NTLM Security Support Provider'])])
+                                                       MechType(TypesMech['MS KRB5 - Microsoft Kerberos 5']), 
+                                                       #MechType(TypesMech['NTLMSSP - Microsoft NTLM Security Support Provider'])
+                                                      ])
         blob['innerContextToken']['negHints']['hintName'] = "not_defined_in_RFC4178@please_ignore"
         respSMBCommand['Buffer'] = encoder.encode(blob)
 
